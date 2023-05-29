@@ -39,5 +39,5 @@ module handshake_tb;
 
 
    handshake_master dut_master(connector);
-   handshake_slave  #(.ALWAYS_READY(0)) dut_slave(connector);
+   handshake_slave  #(.ALWAYS_READY(1)) dut_slave(connector);
 endmodule // handshake_tb

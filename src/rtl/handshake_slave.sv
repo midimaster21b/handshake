@@ -77,6 +77,10 @@ module handshake_slave #(parameter
 	    while(conn.valid == '1) begin
 	       read_beat();
 	    end
+
+	 end else begin
+	    read_beat();
+
 	 end
       end
    end
