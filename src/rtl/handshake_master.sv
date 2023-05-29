@@ -1,0 +1,121 @@
+module handshake_master(conn);
+   handshake_if conn;
+
+   typedef struct {
+      logic [$bits(conn.data)-1:0] data;
+      logic                        valid;
+      logic                        ready;
+   } handshake_beat_t;
+
+   typedef mailbox		   #(handshake_beat_t) handshake_inbox_t;
+
+   handshake_inbox_t handshake_inbox  = new();
+   handshake_inbox_t handshake_expect = new();
+
+   handshake_beat_t empty_beat = '{default: '0};
+   handshake_beat_t temp_beat;
+
+
+   /**************************************************************************
+    * Writes a beat to the handshake BFM output lines
+    **************************************************************************/
+   task write_beat;
+      input handshake_beat_t temp;
+
+      begin
+	 // Write output beat
+	 conn.valid  <= temp.valid;
+	 conn.data   <= temp.data;
+
+      end
+   endtask // write_beat
+
+
+   /**************************************************************************
+    * Add a beat to the queue of handshake beats to be written
+    **************************************************************************/
+   task put_beat;
+      input logic [$bits(conn.data)-1:0]  data;
+      input logic                         valid;
+
+      handshake_beat_t temp;
+
+      begin
+	 temp.valid = valid;
+	 temp.data  = data;
+
+	 // Add output beat to mailbox
+	 handshake_inbox.put(temp);
+	 handshake_expect.put(temp);
+
+      end
+   endtask // put_beat
+
+
+   /**************************************************************************
+    * Get the oldest beat written to the queue of handshake beats.
+    **************************************************************************/
+   task get_beat;
+      output logic [$bits(conn.data)-1:0] data;
+
+      handshake_beat_t temp;
+
+      begin
+	 // Get output beat from mailbox
+	 handshake_expect.get(temp);
+
+	 // Assign beat values to outputs
+	 data  = temp.data;
+
+      end
+   endtask // get_beat
+
+
+   /**************************************************************************
+    * Add a basic beat to the queue of handshake beats to be written. A basic beat
+    * only requires data and last to be specified.
+    **************************************************************************/
+   task put_simple_beat;
+      input logic [$bits(conn.data)-1:0] data;
+
+      begin
+	 put_beat(.valid('1),
+		  .data(data));
+      end
+   endtask // put_simple_beat
+
+
+
+   initial begin
+      $timeformat(-9, 2, " ns", 20);
+
+      conn.valid = '0;
+      conn.data  = '0;
+
+      #1;
+
+      forever begin
+	 if(handshake_inbox.try_get(temp_beat) != 0) begin
+	    write_beat(temp_beat);
+
+	    $display("%t: Handshake Master - Write Data - '%x'", $time, temp_beat.data);
+
+	    @(negedge conn.clk)
+	      if(conn.ready == '0) begin
+		 wait(conn.ready == '1);
+	      end
+
+	    // Wait for device ready
+	    @(posedge conn.clk && conn.ready == '1);
+
+	 end else begin
+	    write_beat(empty_beat);
+
+	    // Wait for the next clock cycle
+	    @(posedge conn.clk);
+
+	 end
+      end
+   end
+
+endmodule // handshake_master_bfm
