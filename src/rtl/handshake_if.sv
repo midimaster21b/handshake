@@ -1,5 +1,5 @@
 interface handshake_if #(parameter
-			 DATA_BITS=8
+			 DATA_BITS
 			 ) (input clk, rst);
 
    logic [(DATA_BITS-1):0] data;

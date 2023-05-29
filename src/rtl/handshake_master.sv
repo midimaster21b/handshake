@@ -7,7 +7,7 @@ module handshake_master(conn);
       logic                        ready;
    } handshake_beat_t;
 
-   typedef mailbox		   #(handshake_beat_t) handshake_inbox_t;
+   typedef mailbox 		   #(handshake_beat_t) handshake_inbox_t;
 
    handshake_inbox_t handshake_inbox  = new();
    handshake_inbox_t handshake_expect = new();

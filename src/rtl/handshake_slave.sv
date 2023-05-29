@@ -7,15 +7,14 @@ module handshake_slave #(parameter
 
    typedef struct {
       logic [$bits(conn.data)-1:0] data;
-      logic                        ready;
-      logic                        valid;
    } handshake_beat_t;
 
    typedef mailbox		   #(handshake_beat_t) handshake_inbox_t;
 
    handshake_inbox_t handshake_inbox = new();
 
-   handshake_beat_t empty_beat = '{default: '0};
+   // handshake_beat_t empty_beat = '{default: '0};
+   handshake_beat_t empty_beat = '{'0};
 
    /**************************************************************************
     * Read a single valid beat from the bus and insert it into the mailbox.
