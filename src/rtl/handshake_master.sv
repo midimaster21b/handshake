@@ -100,7 +100,7 @@ module handshake_master #(parameter
 	 if(handshake_inbox.try_get(temp_beat) != 0) begin
 	    write_beat(temp_beat);
 
-	    $display("%t: %s - Write Data - '%x'", $time, IFACE_NAME, temp_beat.data);
+	    $display("%t: %s - Write Data - '%X'", $time, IFACE_NAME, temp_beat.data);
 
 	    @(negedge conn.clk)
 	      if(conn.ready == '0) begin

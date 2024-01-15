@@ -33,7 +33,14 @@ module handshake_slave #(parameter
 	 // Wait for handshake to complete
 	 while (conn.valid != '1 || conn.ready != '1) begin
 	    $display("%t: %s - Waiting on handshake...", $time, IFACE_NAME, conn.ready, conn.valid);
-	    @(posedge conn.clk);
+
+	    // NOTE: The every edge clock detection is so that valid assertions
+	    // after a constant ready assertion (due to expect_beat or
+	    // otherwise) can be detected within the same beat and responded to
+	    // on the next beat. The ready assignment is blocking and therefore
+	    // can be detected on the current beat so both posedge and negedge
+	    // work for that.
+	    @(edge conn.clk);
 	 end
 
 	 // Write output beat
@@ -128,7 +135,6 @@ module handshake_slave #(parameter
    endtask
 
 
-
    /**************************************************************************
     * Main runtime loop
     **************************************************************************/
@@ -138,7 +144,7 @@ module handshake_slave #(parameter
       forever begin
 	 if(ALWAYS_READY==0) begin
 	    @(posedge conn.clk);
-	    if(conn.valid == '1) begin
+	    if(conn.valid == '1 || conn.ready == '1) begin
 	       read_beat();
 	    end
 
