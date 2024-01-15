@@ -1,4 +1,6 @@
-module handshake_master(conn);
+module handshake_master #(parameter
+			  IFACE_NAME="handshake_master"
+			  ) (conn);
    handshake_if conn;
 
    typedef struct {
@@ -98,7 +100,7 @@ module handshake_master(conn);
 	 if(handshake_inbox.try_get(temp_beat) != 0) begin
 	    write_beat(temp_beat);
 
-	    $display("%t: Handshake Master - Write Data - '%x'", $time, temp_beat.data);
+	    $display("%t: %s - Write Data - '%x'", $time, IFACE_NAME, temp_beat.data);
 
 	    @(negedge conn.clk)
 	      if(conn.ready == '0) begin
