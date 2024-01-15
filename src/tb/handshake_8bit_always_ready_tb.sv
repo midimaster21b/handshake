@@ -1,4 +1,4 @@
-module handshake_tb;
+module handshake_8bit_always_ready_tb;
 
    logic clk  = 0;
    logic rst  = 0;
@@ -40,4 +40,4 @@ module handshake_tb;
 
    handshake_master dut_master(connector);
    handshake_slave  #(.ALWAYS_READY(1)) dut_slave(connector);
-endmodule // handshake_tb
+endmodule // handshake_8bit_always_ready_tb
