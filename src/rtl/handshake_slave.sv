@@ -15,7 +15,6 @@ module handshake_slave #(parameter
    handshake_inbox_t handshake_inbox = new();
    handshake_inbox_t handshake_expect_inbox = new();
 
-   // handshake_beat_t empty_beat = '{default: '0};
    handshake_beat_t empty_beat = '{'0};
 
    /**************************************************************************
@@ -29,9 +28,11 @@ module handshake_slave #(parameter
 	 $timeformat(-9, 2, " ns", 20);
 
 	 // Set ready signal
-	 conn.ready <= '1;
+	 conn.ready = '1;
 
+	 // Wait for handshake to complete
 	 while (conn.valid != '1 || conn.ready != '1) begin
+	    $display("%t: %s - Waiting on handshake...", $time, IFACE_NAME, conn.ready, conn.valid);
 	    @(posedge conn.clk);
 	 end
 
@@ -42,7 +43,7 @@ module handshake_slave #(parameter
 	 if(FAIL_ON_MISMATCH == 0) begin
 	    // If no expected beat present, only output the data received
 	    if(handshake_expect_inbox.num() == 0) begin
-	       $display("%t: %s - Getting Data - '%x' [WARNING - No expected data]", $time, IFACE_NAME, temp.data);
+	       $display("%t: %s - Received: '%x' [WARNING - No expected data]", $time, IFACE_NAME, temp.data);
 
 	    // Compare if present, but only output a warning if mismatch
 	    end else begin
@@ -57,9 +58,6 @@ module handshake_slave #(parameter
 	       end
 	    end
 
-	    // Save the received beat to the received beats inbox
-	    handshake_inbox.put(temp);
-
 	 // We do care about a mismatch
 	 end else begin
 	    if(handshake_expect_inbox.num() == 0) begin
@@ -70,12 +68,13 @@ module handshake_slave #(parameter
 	    end else begin
 	       // Get the expected beat
 	       handshake_expect_inbox.get(temp_check);
-	       // $assert(temp.data == temp_check.data) else $fatal("%t: %s - Received: '%x' - Expected: '%x'", $time, IFACE_NAME, temp.data, temp_check.data);
 	       $assert(temp.data == temp_check.data);
 	       $display("%t: %s - Received: '%x' - Expected: '%x'", $time, IFACE_NAME, temp.data, temp_check.data);
 	    end // else: !if(handshake_expect_inbox.num() == 0)
 	 end // else: !if(FAIL_ON_MISMATCH == 0)
 
+	 // Save the received beat to the received beats inbox
+	 handshake_inbox.put(temp);
 
 	 @(posedge conn.clk);
 	 // Set ready signal low if not expecting any additional transactions,
@@ -138,10 +137,8 @@ module handshake_slave #(parameter
 
       forever begin
 	 if(ALWAYS_READY==0) begin
-	    wait(conn.valid == '1);
 	    @(posedge conn.clk);
-
-	    while(conn.valid == '1) begin
+	    if(conn.valid == '1) begin
 	       read_beat();
 	    end
 
