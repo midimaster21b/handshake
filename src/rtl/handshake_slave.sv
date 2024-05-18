@@ -32,7 +32,7 @@ module handshake_slave #(parameter
 
 	 // Wait for handshake to complete
 	 while (conn.valid != '1 || conn.ready != '1) begin
-	    $display("%t: %s - Waiting on handshake...", $time, IFACE_NAME, conn.ready, conn.valid);
+	    // $display("%t: %s - Waiting on handshake...", $time, IFACE_NAME, conn.ready, conn.valid);
 
 	    // NOTE: The every edge clock detection is so that valid assertions
 	    // after a constant ready assertion (due to expect_beat or
@@ -86,12 +86,11 @@ module handshake_slave #(parameter
 	 @(posedge conn.clk);
 	 // Set ready signal low if not expecting any additional transactions,
 	 // otherwise keep it high in expectation of next transaction.
-	 if(handshake_expect_inbox.num() == 0) begin
+	 if(handshake_expect_inbox.num() == 0 && ALWAYS_READY == 0) begin
 	    conn.ready <= '0;
 	 end else begin
 	    conn.ready <= '1;
 	 end
-
       end
    endtask // read_beat
 

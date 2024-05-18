@@ -9,26 +9,32 @@ module handshake_8bit_always_ready_tb;
    logic ready;
    logic [31:0] data;
 
-   handshake_if #(.DATA_BITS(8)) connector(.clk(clk), .rst(rst));
+   handshake_if #(.DATA_BITS(8)) conn(.clk(clk), .rst(rst));
 
-   assign valid = connector.valid;
-   assign ready = connector.ready;
-   assign data  = connector.data;
+   assign valid = conn.valid;
+   assign ready = conn.ready;
+   assign data  = conn.data;
 
+   ////////////////////////////////////////////
+   // Stimulus
+   ////////////////////////////////////////////
    initial begin
-      #10us;
+      wait(rst == '1);
+      @(posedge clk);
 
       dut_master.put_simple_beat(8'hA5);
       dut_master.put_simple_beat(8'hC4);
    end
 
 
-   initial begin
-      forever begin
-	 #10 clk = ~clk;
-      end
-   end
+   ////////////////////////////////////////////
+   // Testbench basics
+   ////////////////////////////////////////////
+   // Clock signal control
+   always #5 clk = ~clk;
 
+   // Deassert reset signal
+   initial #100 rst = 1'b1;
 
    initial begin
       #1ms;
@@ -39,7 +45,6 @@ module handshake_8bit_always_ready_tb;
       $finish;
    end
 
-
-   handshake_master dut_master(connector);
-   handshake_slave  #(.ALWAYS_READY(1)) dut_slave(connector);
+   handshake_master dut_master(conn);
+   handshake_slave  #(.ALWAYS_READY(1)) dut_slave(conn);
 endmodule // handshake_8bit_always_ready_tb

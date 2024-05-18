@@ -28,6 +28,9 @@ targets:
     <<: *default
     description: Simulate the design
     default_tool: xsim
+    tools:
+      xsim:
+        xelab_options: [--debug, all]
     filesets_append:
       - tb
     toplevel: handshake_8bit_always_ready_tb
