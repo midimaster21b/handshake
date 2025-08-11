@@ -1,6 +1,6 @@
 module handshake_master #(parameter
 			  IFACE_NAME="handshake_master",
-			  VERBOSE="TRUE"
+			  VERBOSE="FALSE"
 			  ) (conn);
    handshake_if conn;
 

@@ -34,7 +34,7 @@ module handshake_8bit_always_ready_tb;
    always #5 clk = ~clk;
 
    // Deassert reset signal
-   initial #100 rst = 1'b1;
+   initial #105 rst = 1'b1;
 
    initial begin
       #1ms;

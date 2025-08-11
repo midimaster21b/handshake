@@ -2,12 +2,12 @@
 module handshake_slave #(parameter
 			 ALWAYS_READY=1,
 			 FAIL_ON_MISMATCH=0,
-			 VERBOSE="TRUE",
+			 VERBOSE="FALSE",
 			 IFACE_NAME="handshake_slave"
 			 ) (conn);
    handshake_if conn;
 
-   typedef struct {
+   typedef struct packed {
       logic [$bits(conn.data)-1:0] data;
    } handshake_beat_t;
 
@@ -29,22 +29,15 @@ module handshake_slave #(parameter
 	 $timeformat(-9, 2, " ns", 20);
 
 	 // Set ready signal
-	 conn.ready = '1;
+	 conn.ready <= '1;
 
 	 // Wait for handshake to complete
 	 while (conn.valid != '1 || conn.ready != '1) begin
-
 	    if (VERBOSE == "TRUE") begin
 	       $display("%t: %s - Waiting on handshake...", $time, IFACE_NAME, conn.ready, conn.valid);
 	    end
 
-	    // NOTE: The every edge clock detection is so that valid assertions
-	    // after a constant ready assertion (due to expect_beat or
-	    // otherwise) can be detected within the same beat and responded to
-	    // on the next beat. The ready assignment is blocking and therefore
-	    // can be detected on the current beat so both posedge and negedge
-	    // work for that.
-	    @(edge conn.clk);
+	    @(posedge conn.clk);
 	 end
 
 	 // Write output beat
@@ -122,15 +115,10 @@ module handshake_slave #(parameter
    task expect_beat;
       input logic [$bits(conn.data)-1:0] data;
 
-      handshake_beat_t temp;
-
       begin
-	 // Assign the data to the data portion of the interface
-	 temp.data <= data;
-
 	 // Put the expected transaction data in the expected transaction
 	 // mailbox.
-	 handshake_expect_inbox.put(temp);
+	 handshake_expect_inbox.put(data);
 
 	 // Set the slave ready high now that we're expecting a transaction
 	 conn.ready <= '1;
