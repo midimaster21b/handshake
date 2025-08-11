@@ -1,5 +1,6 @@
 module handshake_master #(parameter
-			  IFACE_NAME="handshake_master"
+			  IFACE_NAME="handshake_master",
+			  VERBOSE="TRUE"
 			  ) (conn);
    handshake_if conn;
 
@@ -100,7 +101,9 @@ module handshake_master #(parameter
 	 if(handshake_inbox.try_get(temp_beat) != 0) begin
 	    write_beat(temp_beat);
 
-	    $display("%t: %s - Write Data - '%X'", $time, IFACE_NAME, temp_beat.data);
+	    if (VERBOSE == "TRUE") begin
+	       $display("%t: %s - Write Data - '%X'", $time, IFACE_NAME, temp_beat.data);
+	    end
 
 	    @(negedge conn.clk)
 	      if(conn.ready == '0) begin

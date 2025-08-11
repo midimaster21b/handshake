@@ -2,6 +2,7 @@
 module handshake_slave #(parameter
 			 ALWAYS_READY=1,
 			 FAIL_ON_MISMATCH=0,
+			 VERBOSE="TRUE",
 			 IFACE_NAME="handshake_slave"
 			 ) (conn);
    handshake_if conn;
@@ -32,7 +33,10 @@ module handshake_slave #(parameter
 
 	 // Wait for handshake to complete
 	 while (conn.valid != '1 || conn.ready != '1) begin
-	    // $display("%t: %s - Waiting on handshake...", $time, IFACE_NAME, conn.ready, conn.valid);
+
+	    if (VERBOSE == "TRUE") begin
+	       $display("%t: %s - Waiting on handshake...", $time, IFACE_NAME, conn.ready, conn.valid);
+	    end
 
 	    // NOTE: The every edge clock detection is so that valid assertions
 	    // after a constant ready assertion (due to expect_beat or
