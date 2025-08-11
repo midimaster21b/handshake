@@ -15,18 +15,26 @@ module handshake_8bit_not_always_ready_tb;
    assign ready = connector.ready;
    assign data  = connector.data;
 
-   initial begin
-      #1us;
-
-      dut_master.put_simple_beat(8'hA5);
-      dut_master.put_simple_beat(8'hC4);
-   end
-
+   always #10 clk = ~clk;
 
    initial begin
-      forever begin
-	 #10 clk = ~clk;
-      end
+      #500ns;
+
+      dut_master.put_simple_beat(8'hA1);
+      dut_master.put_simple_beat(8'hB2);
+      #100ns;
+      dut_master.put_simple_beat(8'hC3);
+      @(posedge clk)
+      @(posedge clk)
+      @(posedge clk)
+      @(posedge clk)
+      dut_master.put_simple_beat(8'hD4);
+      #100ns;
+      dut_master.put_simple_beat(8'hAB);
+      dut_master.put_simple_beat(8'hCD);
+      dut_master.put_simple_beat(8'hEF);
+      dut_master.put_simple_beat(8'h12);
+
    end
 
 

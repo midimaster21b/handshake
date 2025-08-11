@@ -1,6 +1,7 @@
 // TODO: Implement reset behavior
 module handshake_slave #(parameter
 			 ALWAYS_READY=1,
+			 CONTINUOUS_READY=1,
 			 FAIL_ON_MISMATCH=0,
 			 VERBOSE="FALSE",
 			 IFACE_NAME="handshake_slave"
@@ -22,7 +23,7 @@ module handshake_slave #(parameter
     * Read a single valid beat from the bus and insert it into the mailbox.
     **************************************************************************/
    task read_beat;
-      handshake_beat_t temp;
+      // handshake_beat_t temp;
       handshake_beat_t temp_check;
 
       begin
@@ -41,13 +42,14 @@ module handshake_slave #(parameter
 	 end
 
 	 // Write output beat
-	 temp.data  = conn.data;
+	 // temp.data  = conn.data;
 
 	 // If we don't care about a mismatch
 	 if(FAIL_ON_MISMATCH == 0) begin
 	    // If no expected beat present, only output the data received
 	    if(handshake_expect_inbox.num() == 0) begin
-	       $display("%t: %s - Received: '%x' [WARNING - No expected data]", $time, IFACE_NAME, temp.data);
+	       // $display("%t: %s - Received: '%x' [WARNING - No expected data]", $time, IFACE_NAME, temp.data);
+	       $display("%t: %s - Received: '%x' [WARNING - No expected data]", $time, IFACE_NAME, conn.data);
 
 	    // Compare if present, but only output a warning if mismatch
 	    end else begin
@@ -56,9 +58,11 @@ module handshake_slave #(parameter
 
 	       // Compare the received and expected
 	       if(temp_check.data == conn.data) begin
-		  $display("%t: %s - Received: '%x' - Expected: '%x'", $time, IFACE_NAME, temp.data, temp_check.data);
+		  // $display("%t: %s - Received: '%x' - Expected: '%x'", $time, IFACE_NAME, temp.data, temp_check.data);
+		  $display("%t: %s - Received: '%x' - Expected: '%x'", $time, IFACE_NAME, conn.data, temp_check.data);
 	       end else begin
-		  $display("%t: %s - Received: '%x' - Expected: '%x' [WARNING - MISMATCH]", $time, IFACE_NAME, temp.data, temp_check.data);
+		  // $display("%t: %s - Received: '%x' - Expected: '%x' [WARNING - MISMATCH]", $time, IFACE_NAME, temp.data, temp_check.data);
+		  $display("%t: %s - Received: '%x' - Expected: '%x' [WARNING - MISMATCH]", $time, IFACE_NAME, conn.data, temp_check.data);
 	       end
 	    end
 
@@ -66,25 +70,45 @@ module handshake_slave #(parameter
 	 end else begin
 	    if(handshake_expect_inbox.num() == 0) begin
 	       // Fail, no expected beat, but a beat was found
-	       $display("%t: %s - Received: '%x' - Expected: '%x' [ERROR - No expected data]", $time, IFACE_NAME, temp.data);
-	       $fatal("No data expected on %s, found: '%x'", IFACE_NAME, temp.data);
+	       // $display("%t: %s - Received: '%x' - Expected: '%x' [ERROR - No expected data]", $time, IFACE_NAME, temp.data);
+	       $display("%t: %s - Received: '%x' - Expected: '%x' [ERROR - No expected data]", $time, IFACE_NAME, conn.data);
+	       // $fatal("No data expected on %s, found: '%x'", IFACE_NAME, temp.data);
+	       $fatal("No data expected on %s, found: '%x'", IFACE_NAME, conn.data);
 
 	    end else begin
 	       // Get the expected beat
 	       handshake_expect_inbox.get(temp_check);
-	       $assert(temp.data == temp_check.data);
-	       $display("%t: %s - Received: '%x' - Expected: '%x'", $time, IFACE_NAME, temp.data, temp_check.data);
+	       // $assert(temp.data == temp_check.data);
+	       $assert(conn.data == temp_check.data);
+	       // $display("%t: %s - Received: '%x' - Expected: '%x'", $time, IFACE_NAME, temp.data, temp_check.data);
+	       $display("%t: %s - Received: '%x' - Expected: '%x'", $time, IFACE_NAME, conn.data, temp_check.data);
 	    end // else: !if(handshake_expect_inbox.num() == 0)
 	 end // else: !if(FAIL_ON_MISMATCH == 0)
 
 	 // Save the received beat to the received beats inbox
-	 handshake_inbox.put(temp);
+	 handshake_inbox.put(conn.data);
 
-	 @(posedge conn.clk);
+	 // @(posedge conn.clk);
 	 // Set ready signal low if not expecting any additional transactions,
 	 // otherwise keep it high in expectation of next transaction.
 	 if(handshake_expect_inbox.num() == 0 && ALWAYS_READY == 0) begin
-	    conn.ready <= '0;
+	    // If not continuous ready, drop ready after ever valid beat
+	    if(CONTINUOUS_READY==0) begin
+	       conn.ready <= '0;
+
+	    // Else continuous ready
+	    end else begin
+	       // If valid, remain ready for next beat
+	       if(conn.valid == '1) begin
+		  conn.ready <= '1;
+
+	       // If valid dropped, drop ready as well
+	       end else begin
+		  conn.ready <= '0;
+
+	       end
+	    end
+
 	 end else begin
 	    conn.ready <= '1;
 	 end
@@ -130,16 +154,23 @@ module handshake_slave #(parameter
     * Main runtime loop
     **************************************************************************/
    initial begin
+      $timeformat(-9, 2, " ns", 20);
       conn.ready  = '0;
 
       forever begin
 	 if(ALWAYS_READY==0) begin
 	    @(posedge conn.clk);
-	    if(conn.valid == '1 || conn.ready == '1) begin
+	    if(CONTINUOUS_READY==1 && conn.valid == '0) begin
+	       // $display("%t: %s - skipping...", $time, IFACE_NAME);
+	       conn.ready <= '0;
+
+	    end else if(conn.valid == '1 || conn.ready == '1) begin
 	       read_beat();
+
 	    end
 
 	 end else begin
+	    @(posedge conn.clk);
 	    read_beat();
 
 	 end
