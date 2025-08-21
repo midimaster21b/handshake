@@ -5,9 +5,9 @@ module handshake_master #(parameter
    handshake_if conn;
 
    typedef struct {
-      logic [$bits(conn.data)-1:0] data;
-      logic                        valid;
-      logic                        ready;
+      logic [conn.DATA_BITS-1:0] data;
+      logic                      valid;
+      logic			 ready;
    } handshake_beat_t;
 
    typedef mailbox 		   #(handshake_beat_t) handshake_inbox_t;
@@ -38,8 +38,8 @@ module handshake_master #(parameter
     * Add a beat to the queue of handshake beats to be written
     **************************************************************************/
    task put_beat;
-      input logic [$bits(conn.data)-1:0]  data;
-      input logic                         valid;
+      input logic [conn.DATA_BITS-1:0]  data;
+      input logic			valid;
 
       handshake_beat_t temp;
 
@@ -59,7 +59,7 @@ module handshake_master #(parameter
     * Get the oldest beat written to the queue of handshake beats.
     **************************************************************************/
    task get_beat;
-      output logic [$bits(conn.data)-1:0] data;
+      output logic [conn.DATA_BITS-1:0] data;
 
       handshake_beat_t temp;
 
@@ -79,7 +79,7 @@ module handshake_master #(parameter
     * only requires data and last to be specified.
     **************************************************************************/
    task put_simple_beat;
-      input logic [$bits(conn.data)-1:0] data;
+      input logic [conn.DATA_BITS-1:0] data;
 
       begin
 	 put_beat(.valid('1),

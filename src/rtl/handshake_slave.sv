@@ -9,7 +9,7 @@ module handshake_slave #(parameter
    handshake_if conn;
 
    typedef struct packed {
-      logic [$bits(conn.data)-1:0] data;
+      logic [conn.DATA_BITS-1:0] data;
    } handshake_beat_t;
 
    typedef mailbox		   #(handshake_beat_t) handshake_inbox_t;
@@ -45,7 +45,7 @@ module handshake_slave #(parameter
 	 if(FAIL_ON_MISMATCH == 0) begin
 	    // If no expected beat present, only output the data received
 	    if(handshake_expect_inbox.num() == 0) begin
-	       $display("%t: %s - Received: '%x' [WARNING - No expected data]", $time, IFACE_NAME, conn.data);
+	       $display("%t: %s - Received: '' [WARNING - No expected data]", $time, IFACE_NAME, conn.data);
 
 	    // Compare if present, but only output a warning if mismatch
 	    end else begin
@@ -109,7 +109,7 @@ module handshake_slave #(parameter
     * Get a beat from the mailbox when one is available. [Blocking]
     **************************************************************************/
    task get_beat;
-      output logic [$bits(conn.data)-1:0] data;
+      output logic [conn.DATA_BITS-1:0] data;
 
       handshake_beat_t temp;
 
@@ -126,7 +126,7 @@ module handshake_slave #(parameter
     * Expect a beat from the master. [Non-blocking]
     **************************************************************************/
    task expect_beat;
-      input logic [$bits(conn.data)-1:0] data;
+      input logic [conn.DATA_BITS-1:0] data;
 
       begin
 	 // Put the expected transaction data in the expected transaction
@@ -147,22 +147,26 @@ module handshake_slave #(parameter
       conn.ready  = '0;
 
       forever begin
-	 if(ALWAYS_READY==0) begin
-	    @(posedge conn.clk);
-	    if(CONTINUOUS_READY==1 && conn.valid == '0) begin
-	       conn.ready <= '0;
+	 if(conn.rst == '1) begin
+	    if(ALWAYS_READY==0) begin
+	       @(posedge conn.clk);
+	       if(CONTINUOUS_READY==1 && conn.valid == '0) begin
+		  conn.ready <= '0;
 
-	    end else if(conn.valid == '1 || conn.ready == '1) begin
+	       end else if(conn.valid == '1 || conn.ready == '1) begin
+		  read_beat();
+
+	       end
+
+	    end else begin
+	       @(posedge conn.clk);
 	       read_beat();
 
 	    end
-
-	 end else begin
+	 end else begin // if (conn.rst == '1)
 	    @(posedge conn.clk);
-	    read_beat();
 
-	 end
+	 end // else: !if(conn.rst == '1)
       end
-   end
 
 endmodule // handshake_slave_bfm
