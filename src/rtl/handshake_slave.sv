@@ -167,6 +167,8 @@ module handshake_slave #(parameter
 	    @(posedge conn.clk);
 
 	 end // else: !if(conn.rst == '1)
-      end
+      end // forever begin
+   end // initial begin
+
 
 endmodule // handshake_slave_bfm
