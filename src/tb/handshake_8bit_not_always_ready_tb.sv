@@ -3,19 +3,21 @@
 module handshake_8bit_not_always_ready_tb;
 
    logic clk  = 0;
-   logic rst  = 0;
+   logic rstn  = 0;
 
    logic valid;
    logic ready;
    logic [31:0] data;
 
-   handshake_if #(.DATA_BITS(8)) connector(.clk(clk), .rst(rst));
+   handshake_if #(.DATA_BITS(8)) connector(.clk(clk), .rst(rstn));
 
    assign valid = connector.valid;
    assign ready = connector.ready;
    assign data  = connector.data;
 
    always #10 clk = ~clk;
+   initial #10 rstn = '1;
+
 
    initial begin
       #500ns;

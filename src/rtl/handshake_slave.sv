@@ -45,7 +45,7 @@ module handshake_slave #(parameter
 	 if(FAIL_ON_MISMATCH == 0) begin
 	    // If no expected beat present, only output the data received
 	    if(handshake_expect_inbox.num() == 0) begin
-	       $display("%t: %s - Received: '' [WARNING - No expected data]", $time, IFACE_NAME, conn.data);
+	       $display("%t: %s - Received: '%x' [WARNING - No expected data]", $time, IFACE_NAME, conn.data);
 
 	    // Compare if present, but only output a warning if mismatch
 	    end else begin
