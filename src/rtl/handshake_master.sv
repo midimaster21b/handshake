@@ -98,29 +98,35 @@ module handshake_master #(parameter
       #1;
 
       forever begin
-	 if(handshake_inbox.try_get(temp_beat) != 0) begin
-	    write_beat(temp_beat);
+	 if(conn.arstn == '1) begin
+	    if(handshake_inbox.try_get(temp_beat) != 0) begin
+	       write_beat(temp_beat);
 
-	    if (VERBOSE == "TRUE") begin
-	       $display("%t: %s - Write Data - '%X'", $time, IFACE_NAME, temp_beat.data);
+	       if (VERBOSE == "TRUE") begin
+		  $display("%t: %s - Write Data - '%X'", $time, IFACE_NAME, temp_beat.data);
+	       end
+
+	       @(negedge conn.clk)
+		 if(conn.ready == '0) begin
+		    wait(conn.ready == '1);
+		 end
+
+	       // Wait for device ready
+	       @(posedge conn.clk && conn.ready == '1);
+
+	    end else begin
+	       write_beat(empty_beat);
+
+	       // Wait for the next clock cycle
+	       @(posedge conn.clk);
+
 	    end
-
-	    @(negedge conn.clk)
-	      if(conn.ready == '0) begin
-		 wait(conn.ready == '1);
-	      end
-
-	    // Wait for device ready
-	    @(posedge conn.clk && conn.ready == '1);
-
-	 end else begin
-	    write_beat(empty_beat);
-
+	 end else begin // if (conn.arstn == '1)
 	    // Wait for the next clock cycle
 	    @(posedge conn.clk);
-
-	 end
-      end
+	    
+	 end // else: !if(conn.arstn == '1)
+      end // forever begin
    end
 
 endmodule // handshake_master_bfm

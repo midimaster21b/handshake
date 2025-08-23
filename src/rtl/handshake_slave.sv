@@ -147,7 +147,7 @@ module handshake_slave #(parameter
       conn.ready  = '0;
 
       forever begin
-	 if(conn.rst == '1) begin
+	 if(conn.arstn == '1) begin
 	    if(ALWAYS_READY==0) begin
 	       @(posedge conn.clk);
 	       if(CONTINUOUS_READY==1 && conn.valid == '0) begin
@@ -163,10 +163,11 @@ module handshake_slave #(parameter
 	       read_beat();
 
 	    end
-	 end else begin // if (conn.rst == '1)
+	 end else begin // if (conn.arstn == '1)
+	    // Wait for the next clock cycle
 	    @(posedge conn.clk);
 
-	 end // else: !if(conn.rst == '1)
+	 end // else: !if(conn.arstn == '1)
       end // forever begin
    end // initial begin
 

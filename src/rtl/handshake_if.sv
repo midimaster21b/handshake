@@ -1,6 +1,6 @@
 interface handshake_if #(parameter
 			 DATA_BITS
-			 ) (input clk, rst);
+			 ) (input clk, arstn);
 
    logic [(DATA_BITS-1):0] data;
    logic                   valid;

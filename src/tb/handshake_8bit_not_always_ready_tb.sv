@@ -9,14 +9,14 @@ module handshake_8bit_not_always_ready_tb;
    logic ready;
    logic [31:0] data;
 
-   handshake_if #(.DATA_BITS(8)) connector(.clk(clk), .rst(rstn));
+   handshake_if #(.DATA_BITS(8)) connector(.clk(clk), .arstn(rstn));
 
    assign valid = connector.valid;
    assign ready = connector.ready;
    assign data  = connector.data;
 
    always #10 clk = ~clk;
-   initial #10 rstn = '1;
+   initial #100 rstn = '1;
 
 
    initial begin

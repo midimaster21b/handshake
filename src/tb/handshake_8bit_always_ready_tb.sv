@@ -3,13 +3,13 @@
 module handshake_8bit_always_ready_tb;
 
    logic clk  = 0;
-   logic rst  = 0;
+   logic rstn = 0;
 
    logic valid;
    logic ready;
    logic [31:0] data;
 
-   handshake_if #(.DATA_BITS(8)) conn(.clk(clk), .rst(rst));
+   handshake_if #(.DATA_BITS(8)) conn(.clk(clk), .arstn(rstn));
 
    assign valid = conn.valid;
    assign ready = conn.ready;
@@ -19,7 +19,7 @@ module handshake_8bit_always_ready_tb;
    // Stimulus
    ////////////////////////////////////////////
    initial begin
-      wait(rst == '1);
+      wait(rstn == '1);
       @(posedge clk);
 
       dut_master.put_simple_beat(8'hA5);
@@ -34,7 +34,7 @@ module handshake_8bit_always_ready_tb;
    always #5 clk = ~clk;
 
    // Deassert reset signal
-   initial #105 rst = 1'b1;
+   initial #105 rstn = 1'b1;
 
    initial begin
       #1ms;
