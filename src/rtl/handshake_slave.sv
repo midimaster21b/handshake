@@ -23,7 +23,6 @@ module handshake_slave #(parameter
     * Read a single valid beat from the bus and insert it into the mailbox.
     **************************************************************************/
    task read_beat;
-      // handshake_beat_t temp;
       handshake_beat_t temp_check;
 
       begin
@@ -45,7 +44,9 @@ module handshake_slave #(parameter
 	 if(FAIL_ON_MISMATCH == 0) begin
 	    // If no expected beat present, only output the data received
 	    if(handshake_expect_inbox.num() == 0) begin
-	       $display("%t: %s - Received: '%x' [WARNING - No expected data]", $time, IFACE_NAME, conn.data);
+	       if(VERBOSE == "TRUE") begin
+		  $display("%t: %s - Received: '%x' [WARNING - No expected data]", $time, IFACE_NAME, conn.data);
+	       end
 
 	    // Compare if present, but only output a warning if mismatch
 	    end else begin
@@ -64,14 +65,16 @@ module handshake_slave #(parameter
 	 end else begin
 	    if(handshake_expect_inbox.num() == 0) begin
 	       // Fail, no expected beat, but a beat was found
-	       $display("%t: %s - Received: '%x' - Expected: '%x' [ERROR - No expected data]", $time, IFACE_NAME, conn.data);
+	       $display("%t: %s - Received: '%x' - Expected: '' [ERROR - No expected data]", $time, IFACE_NAME, conn.data);
 	       $fatal("No data expected on %s, found: '%x'", IFACE_NAME, conn.data);
 
 	    end else begin
 	       // Get the expected beat
 	       handshake_expect_inbox.get(temp_check);
-	       $assert(conn.data == temp_check.data);
-	       $display("%t: %s - Received: '%x' - Expected: '%x'", $time, IFACE_NAME, conn.data, temp_check.data);
+	       assert(conn.data == temp_check.data);
+	       $display("%t: %s - Received: '%x'", $time, IFACE_NAME, conn.data);
+	       $display("%t: %s - Expected: '%x'", $time, IFACE_NAME, temp_check.data);
+	       $fatal("No data expected on %s, found: '%x'", IFACE_NAME, conn.data);
 	    end // else: !if(handshake_expect_inbox.num() == 0)
 	 end // else: !if(FAIL_ON_MISMATCH == 0)
 
